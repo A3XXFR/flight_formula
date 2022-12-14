@@ -15,29 +15,24 @@ part 'regulation_state.dart';
 class RegulationBloc extends Bloc<RegulationEvent, RegulationState> {
   final int _title = 1;
   late DateTime _latestTitleIssueDate;
-  RegulationBloc({required this.httpClient}) : super(const RegulationState()) {
+  RegulationBloc({required this.httpClient}) : super( RegulationState()) {
     on<RegulationFetched>(_onRegulationFetched);
   }
 
   Future<void> _onRegulationFetched(
       RegulationFetched event, Emitter<RegulationState> emit) async {
-    if (state.hasReachedMax) return;
     try {
       if (state.status == RegulationStatus.initial) {
         final regulations = await _fetchRegulations();
         return emit(state.copyWith(
           status: RegulationStatus.success,
           regulations: regulations,
-          hasReachedMax: false,
         ));
       }
       final regulations = await _fetchRegulations();
-      emit(regulations.isEmpty
-          ? state.copyWith(hasReachedMax: true)
-          : state.copyWith(
+      emit(state.copyWith(
               status: RegulationStatus.success,
-              regulations: List.of(state.regulations)..addAll(regulations),
-              hasReachedMax: false,
+              regulations: state.regulations,
             ));
     } catch (_) {
       emit(state.copyWith(status: RegulationStatus.failure));
@@ -108,27 +103,15 @@ class RegulationBloc extends Bloc<RegulationEvent, RegulationState> {
       final Map<String, dynamic> jsonBody = json.decode(jsonResponse.body);
       final List<XmlElement> xmlBody =
           XmlDocument.parse(xmlResponse.body).findAllElements("DIV8").toList();
-      List<Regulation> fullRegs = _createRegulationObject(jsonBody, xmlBody);
-      return fullRegs;
+      HeaderRegulation fullRegs = _createRegulationObject(jsonBody, xmlBody) as HeaderRegulation;
+      List<SectionRegulation> sectionRegulations = Regulation.getSectionRegulations(fullRegs);
+
+      return sectionRegulations;
     }
     throw Exception('error fetching regulations online');
   }
 
-  List<Regulation> _createRegulationObject(
-      Map<String, dynamic> regList, List<XmlElement> fullText) {
-    if (regList["type"] != "part") {
-      List<SectionRegulation> sections = [];
-      for (var child in regList["children"]) {
-        XmlElement xmlElement = fullText.firstWhere((XmlElement element) =>
-            element.getAttribute("N") == child["identifier"]);
-        sections.add(SectionRegulation.fromJson(child, xmlElement));
-      }
-      return PartRegulation.fromJson(json, children)
-    }
-  }
-
-
-  /*Regulation _createRegulationObject(
+  Regulation _createRegulationObject(
       Map<String, dynamic> regList, List<XmlElement> fullText) {
     if (regList["children"] != null) {
       List<Regulation> children = [];
@@ -136,14 +119,14 @@ class RegulationBloc extends Bloc<RegulationEvent, RegulationState> {
         Regulation childObj = _createRegulationObject(child, fullText);
         children.add(childObj);
       }
-      return PartRegulation.fromJson(regList, children);
+      return HeaderRegulation.fromJson(regList, children);
     } else {
       XmlElement xmlElement = fullText.firstWhere((XmlElement element) =>
           element.getAttribute("N") == regList["identifier"]);
       Regulation child = SectionRegulation.fromJson(regList, xmlElement);
       return child;
     }
-  }*/
+  }
 
   DateTime _parseDate(String raw) {
     int year = int.parse(raw.split("-")[0]);

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flight_formula/regulations/models/models.dart';
 import 'package:xml/xml.dart';
 
 enum regType {
@@ -20,12 +21,12 @@ abstract class Regulation extends Equatable {
   final bool reserved;
 
   const Regulation({
-    required this.identifier,
-    required this.label,
-    required this.labelLevel,
-    required this.labelDescription,
-    required this.type,
-    required this.reserved,
+    this.identifier = "",
+    this.label = "",
+    this.labelLevel = "",
+    this.labelDescription = "",
+    this.type = "",
+    this.reserved = false,
   });
 
   @override
@@ -36,11 +37,24 @@ abstract class Regulation extends Equatable {
         type,
         reserved,
       ];
+
+  static List<SectionRegulation> getSectionRegulations(Regulation regulation) {
+    List<SectionRegulation> sectionRegulations = [];
+
+    if (regulation is HeaderRegulation) {
+      for (var child in regulation.children) {
+        sectionRegulations.addAll(getSectionRegulations(child));
+      }
+    } else if (regulation is SectionRegulation) {
+      sectionRegulations.add(regulation);
+    }
+    return sectionRegulations;
+  }
 }
 
-class PartRegulation extends Regulation {
+class HeaderRegulation extends Regulation {
   final List<Regulation> children;
-  const PartRegulation({
+  const HeaderRegulation({
     required this.children,
     required super.identifier,
     required super.label,
@@ -50,9 +64,9 @@ class PartRegulation extends Regulation {
     required super.reserved,
   });
 
-  factory PartRegulation.fromJson(Map<String, dynamic> json,
-      /*XmlElement xml,*/ List<Regulation> children) {
-    return PartRegulation(
+  factory HeaderRegulation.fromJson(
+      Map<String, dynamic> json, List<Regulation> children) {
+    return HeaderRegulation(
       children: children,
       identifier: json["identifier"],
       label: json["label"],

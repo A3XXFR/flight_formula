@@ -3,33 +3,29 @@ part of 'regulation_bloc.dart';
 enum RegulationStatus { initial, success, failure }
 
 class RegulationState extends Equatable {
-  const RegulationState({
+  RegulationState({
     this.status = RegulationStatus.initial,
-    this.regulations = const <Regulation>[],
-    this.hasReachedMax = false,
+    this.regulations = const <Regulation> [],
   });
 
   final RegulationStatus status;
-  final List<Regulation> regulations;
-  final bool hasReachedMax;
+  List<Regulation> regulations;
 
   RegulationState copyWith({
     RegulationStatus? status,
     List<Regulation>? regulations,
-    bool? hasReachedMax,
   }) {
     return RegulationState(
       status: status ?? this.status,
       regulations: regulations ?? this.regulations,
-      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
     );
   }
 
   @override
   String toString() {
-    return '''RegulationState { status: $status, hasReachedMax: $hasReachedMax, Regulations: ${regulations.length} }''';
+    return '''RegulationState { status: $status, Regulations: $regulations }''';
   }
 
   @override
-  List<Object> get props => [status, regulations, hasReachedMax];
+  List<Object> get props => [status, regulations];
 }
