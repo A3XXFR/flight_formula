@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flight_formula/regulations/models/models.dart';
-import 'package:xml/xml.dart';
 
-enum regType {
+enum RegType {
   title,
   chapter,
   subchapter,
@@ -50,6 +48,23 @@ abstract class Regulation extends Equatable {
     }
     return sectionRegulations;
   }
+
+  static List<Regulation> getRegulationsByType(
+      Regulation regulation, String type) {
+    List<Regulation> regulations = [];
+
+    if (regulation is HeaderRegulation) {
+      // Recursively search the children of the header regulation
+      for (var child in regulation.children) {
+        if (child.type == type) {
+          regulations.add(child);
+        } else {
+          regulations.addAll(getRegulationsByType(child, type));
+        }
+      }
+    }
+    return regulations;
+  }
 }
 
 class HeaderRegulation extends Regulation {
@@ -90,9 +105,9 @@ class SectionRegulation extends Regulation {
     required super.reserved,
   });
 
-  factory SectionRegulation.fromJson(json, XmlElement xml) {
+  factory SectionRegulation.fromJson(json, String html) {
     return SectionRegulation(
-      body: xml.innerText,
+      body: html,
       identifier: json["identifier"],
       label: json["label"] as String,
       labelLevel: json["label_level"] as String,
@@ -101,4 +116,11 @@ class SectionRegulation extends Regulation {
       reserved: json["reserved"] as bool,
     );
   }
+
+/*  bool _checkIfSectionRegulation(json) {
+    switch (json["type"]) {
+      case 'section':
+      case 'appendix':
+    }
+  }*/
 }

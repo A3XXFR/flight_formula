@@ -29,9 +29,9 @@ class Regulation extends Equatable {
     this.description = '',
     this.isCompleted = false,
   })  : assert(
-  id == null || id.isNotEmpty,
-  'id can not be null and should be empty',
-  ),
+          id == null || id.isNotEmpty,
+          'id can not be null and should be empty',
+        ),
         id = id ?? const Uuid().v4();
 
   /// The unique identifier of the Regulation.
