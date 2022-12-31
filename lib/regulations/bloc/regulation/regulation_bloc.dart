@@ -152,23 +152,7 @@ class RegulationBloc extends Bloc<RegulationEvent, RegulationState> {
         html: const Utf8Decoder().convert(xmlResponse.bodyBytes),
       );
 
-      final Map<String, dynamic> jsonBody =
-          json.decode(const Utf8Decoder().convert(jsonResponse.bodyBytes));
-      final List<dom.Element> htmlBody = [];
-
-      htmlBody.addAll(html_parser
-          .parse(const Utf8Decoder().convert(xmlResponse.bodyBytes))
-          .getElementsByClassName("section"));
-      htmlBody.addAll(html_parser
-          .parse(const Utf8Decoder().convert(xmlResponse.bodyBytes))
-          .getElementsByClassName("appendix"));
-
-      HeaderRegulation fullRegs =
-          _createRegulationObject(jsonBody, htmlBody) as HeaderRegulation;
-      List<Regulation> partRegulations =
-          Regulation.getRegulationsByType(fullRegs, "subchapter");
-
-      return partRegulations;
+      return _getRegulationsLocally();
     }
     throw Exception('error fetching regulations online');
   }
